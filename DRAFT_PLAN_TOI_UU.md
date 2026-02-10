@@ -13,7 +13,7 @@
 
 ---
 
-## ⚠️ 1. VẤN ĐỀ NGHIÊM TRỌNG PHÁT HIỆN TRONG DATA
+## ⚠️ 1. VẤN ĐỀ TRONG DATA
 
 ### 1.1. Multicollinearity hoàn hảo (correlation = 1.000)
 
@@ -505,3 +505,4 @@ project/
 
 *Draft Plan được tạo dựa trên phân tích dữ liệu thực tế từ project.*
 *Ngày tạo: 2026-02-10*
+

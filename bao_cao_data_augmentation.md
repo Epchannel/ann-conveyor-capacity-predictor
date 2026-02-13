@@ -16,21 +16,21 @@
 
 | Cột | Ý nghĩa | Kiểu | Vai trò |
 |---|---|---|---|
-| `_m` | Độ ẩm | Integer (90–97) | Feature độc lập |
-| `nhit_` | Nhiệt độ | Integer (27–30) | Feature độc lập |
-| `gc_nghing` | Góc nghiêng | Categorical (20, 22) | Feature độc lập |
+| `do_am` | Độ ẩm | Integer (90–97) | Feature độc lập |
+| `nhiet_do` | Nhiệt độ | Integer (27–30) | Feature độc lập |
+| `goc_nghieng` | Góc nghiêng | Categorical (20, 22) | Feature độc lập |
 | `ca` | Ca làm việc | Categorical (1, 3) | Feature độc lập |
-| `cng_sut_tb` | Công suất trung bình | Continuous | Feature độc lập |
-| `sn_lng` | Sản lượng | Continuous | **Phụ thuộc** (`= cng_sut_tb × 8`) |
-| `ti_tiu_th` | Tải tiêu thụ | Continuous | **Phụ thuộc** (`= cng_sut_tb × 40`) |
+| `cong_suat_tb` | Công suất trung bình | Continuous | Feature độc lập |
+| `san_luong` | Sản lượng | Continuous | **Phụ thuộc** (`= cong_suat_tb × 8`) |
+| `tai_tieu_thu` | Tải tiêu thụ | Continuous | **Phụ thuộc** (`= cong_suat_tb × 40`) |
 
 ### Ràng buộc bắt buộc
 
 Dữ liệu có **2 mối quan hệ xác định** phải được bảo toàn tuyệt đối trong quá trình augmentation:
 
 ```
-sn_lng     = cng_sut_tb × 8
-ti_tiu_th  = cng_sut_tb × 40
+san_luong     = cong_suat_tb × 8
+tai_tieu_thu  = cong_suat_tb × 40
 ```
 
 → Mọi phương pháp augmentation chỉ cần sinh giá trị mới cho **5 features độc lập**, sau đó tính lại 2 cột phụ thuộc.
@@ -42,13 +42,13 @@ ti_tiu_th  = cng_sut_tb × 40
 ### 2.1. Noise-based Augmentation
 
 - **Nguyên lý**: Lấy mẫu ngẫu nhiên (with replacement) từ dữ liệu gốc, thêm nhiễu Gaussian có kiểm soát (noise_scale = 15% × std) vào các features liên tục và integer. Giữ nguyên features categorical.
-- **Nhiễu được thêm theo nhóm** `(gc_nghing, ca)` để bảo toàn phân phối điều kiện.
+- **Nhiễu được thêm theo nhóm** `(goc_nghieng, ca)` để bảo toàn phân phối điều kiện.
 - **Clip giá trị** trong khoảng hợp lý (±5% so với min/max gốc).
 
 ### 2.2. KDE Conditional Sampling
 
-- **Nguyên lý**: Sử dụng **Kernel Density Estimation** để học phân phối xác suất của từng feature theo nhóm `(gc_nghing, ca)`. Sau đó lấy mẫu mới từ phân phối đã học.
-- **Bandwidth tối ưu**: `cng_sut_tb = 2.0`, `_m = 0.8`, `nhit_ = 0.5` (điều chỉnh theo đặc tính từng feature).
+- **Nguyên lý**: Sử dụng **Kernel Density Estimation** để học phân phối xác suất của từng feature theo nhóm `(goc_nghieng, ca)`. Sau đó lấy mẫu mới từ phân phối đã học.
+- **Bandwidth tối ưu**: `cong_suat_tb = 2.0`, `do_am = 0.8`, `nhiet_do = 0.5` (điều chỉnh theo đặc tính từng feature).
 - Tỷ lệ nhóm trong dữ liệu gốc được giữ nguyên khi sinh dữ liệu mới.
 - Dữ liệu được sinh **hoàn toàn mới** (không phải copy + noise).
 
@@ -80,8 +80,8 @@ ti_tiu_th  = cng_sut_tb × 40
 
 | Chỉ số | Ý nghĩa | Tiêu chí tốt |
 |---|---|---|
-| **Mean diff (%)** | Sai lệch giá trị trung bình `cng_sut_tb` giữa dữ liệu gốc và synthetic | Càng thấp càng tốt (< 0.5%) |
-| **Std diff (%)** | Sai lệch độ lệch chuẩn `cng_sut_tb` | Càng thấp càng tốt (< 5%) |
+| **Mean diff (%)** | Sai lệch giá trị trung bình `cong_suat_tb` giữa dữ liệu gốc và synthetic | Càng thấp càng tốt (< 0.5%) |
+| **Std diff (%)** | Sai lệch độ lệch chuẩn `cong_suat_tb` | Càng thấp càng tốt (< 5%) |
 | **KS p-value** | Kiểm định Kolmogorov-Smirnov — p > 0.05 nghĩa là phân phối synthetic giống gốc | p > 0.05 → PASS |
 | **Wasserstein** | Khoảng cách Wasserstein giữa 2 phân phối | Càng thấp càng tốt |
 | **Corr diff** | Trung bình sai lệch correlation giữa các features | Càng thấp càng tốt (< 0.1) |
@@ -128,7 +128,7 @@ ti_tiu_th  = cng_sut_tb × 40
 | Bảo toàn std | 0.1417% | **Tốt nhất** — phương sai gần như không đổi |
 | Wasserstein distance | 0.3332 | **Thấp nhất** — phân phối gần gốc nhất |
 | Đa dạng dữ liệu | Cao | Sinh dữ liệu mới thực sự, không chỉ là copy + noise |
-| Quan hệ xác định | ✅ Bảo toàn | `sn_lng = cng_sut_tb × 8`, `ti_tiu_th = cng_sut_tb × 40` |
+| Quan hệ xác định | ✅ Bảo toàn | `san_luong = cong_suat_tb × 8`, `tai_tieu_thu = cong_suat_tb × 40` |
 | Không cần thư viện ngoài | ✅ | Chỉ dùng scipy, sklearn (có sẵn) |
 
 ### So sánh trực tiếp KDE vs Noise-based (2 phương pháp pass KS test)
